@@ -16,9 +16,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title Vaultex API
+// @title Vaultex
 // @version 1.0
-// @description This is the API documentation for Vaultex, a secure vault application.
+// @description A Ledger-as-a-Service API. Platforms integrate Vaultex to manage their users' wallets and track every financial transaction via double-entry bookkeeping.
 // @contact.name API Support
 // @contact.url https://github.com/michaelkinginfosec
 // @contact.email osundemichael7@gmail.com
@@ -35,7 +35,7 @@ func main() {
 	}
 	userRepo := repository.NewRepository(pool)
 	userService := service.NewService(userRepo)
-	userHandler := handlers.NewUserHandler(userService)
+	organizationHandler := handlers.NewOrganizationHandler(userService)
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 
@@ -48,7 +48,7 @@ func main() {
 	})
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
-	routes.UsersRoutes(v1, userHandler)
+	routes.OrganizationRoutes(v1, organizationHandler)
 	api.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	log.Printf("Server running on :%s\n", cfg.Port)
 	r.Run(":" + cfg.Port)

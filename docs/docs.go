@@ -19,39 +19,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/users": {
-            "get": {
-                "description": "Retrieve a list of all users",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Get all users",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.UserResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
+        "/organizations": {
             "post": {
-                "description": "Create a new user with the provided name and email",
+                "description": "Create a new organization with the provided name and email",
                 "consumes": [
                     "application/json"
                 ],
@@ -61,15 +31,15 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Create a new user",
+                "summary": "Create a new organization",
                 "parameters": [
                     {
-                        "description": "User data",
-                        "name": "user",
+                        "description": "Organization data",
+                        "name": "organization",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateUserRequest"
+                            "$ref": "#/definitions/dto.CreateOrganizationRequest"
                         }
                     }
                 ],
@@ -77,7 +47,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.UserResponse"
+                            "$ref": "#/definitions/dto.OrganizationSignupResponse"
                         }
                     },
                     "400": {
@@ -101,9 +71,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/email": {
+        "/organizations/email/{email}": {
             "get": {
-                "description": "Retrieve a user by their email address",
+                "description": "Retrieve an organization by their email address",
                 "consumes": [
                     "application/json"
                 ],
@@ -111,15 +81,15 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "organizations"
                 ],
-                "summary": "Get user by email",
+                "summary": "Get organization by email",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User Email",
+                        "description": "Organization Email",
                         "name": "email",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -127,7 +97,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.UserResponse"
+                            "$ref": "#/definitions/dto.OrganizationLoginResponse"
                         }
                     },
                     "404": {
@@ -145,9 +115,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{id}": {
-            "get": {
-                "description": "Retrieve a user by their unique ID",
+        "/organizations/login": {
+            "post": {
+                "description": "Authenticate an organization using their email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -155,66 +125,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Auth"
                 ],
-                "summary": "Get user by ID",
+                "summary": "Login an organization",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update a user's name and email by their unique ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Update user by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated user data",
-                        "name": "user",
+                        "description": "Login credentials",
+                        "name": "credentials",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateUserRequest"
+                            "$ref": "#/definitions/dto.LoginRequest"
                         }
                     }
                 ],
@@ -222,7 +143,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.UserResponse"
+                            "$ref": "#/definitions/dto.OrganizationLoginResponse"
                         }
                     },
                     "400": {
@@ -231,47 +152,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete a user by their unique ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Delete user by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -287,17 +169,33 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.CreateUserRequest": {
+        "dto.CreateOrganizationRequest": {
             "type": "object",
             "required": [
                 "email",
-                "name"
+                "organization_name",
+                "password",
+                "phone_number",
+                "registered_name"
             ],
             "properties": {
                 "email": {
                     "type": "string"
                 },
-                "name": {
+                "organization_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "registered_name": {
+                    "type": "string"
+                },
+                "website_url": {
                     "type": "string"
                 }
             }
@@ -310,27 +208,67 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateUserRequest": {
+        "dto.LoginRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
+                "password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         },
-        "dto.UserResponse": {
+        "dto.OrganizationLoginResponse": {
             "type": "object",
             "properties": {
+                "api_key": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "name": {
+                "organization_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "registered_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.OrganizationSignupResponse": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "api_secret": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "organization_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "registered_name": {
                     "type": "string"
                 }
             }
@@ -344,8 +282,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Vaultex API",
-	Description:      "This is the API documentation for Vaultex, a secure vault application.",
+	Title:            "Vaultex",
+	Description:      "A Ledger-as-a-Service API. Platforms integrate Vaultex to manage their users' wallets and track every financial transaction via double-entry bookkeeping.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
