@@ -65,6 +65,8 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 		RegisteredName:   organization.RegisteredName,
 		PhoneNumber:      organization.PhoneNumber,
 		Email:            organization.Email,
+		APIKey:           organization.APIKey,
+		APISecret:        organization.APISecret,
 	}
 
 	c.JSON(http.StatusCreated, res)

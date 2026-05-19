@@ -23,7 +23,7 @@ func NewRepository(db *pgxpool.Pool) OrganizationRepository {
 
 func (r *repo) Create(ctx context.Context, organization *model.Organization) error {
 	query := `INSERT INTO organization (organization_name, registered_name, phone_number, website_url,  api_key, api_secret, email, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-	return r.db.QueryRow(ctx, query, organization.OrganizationName, organization.RegisteredName, organization.PhoneNumber, organization.WebsiteURL, organization.Email, organization.APIKey, organization.APISecret, organization.Password).Scan(&organization.ID)
+	return r.db.QueryRow(ctx, query, organization.OrganizationName, organization.RegisteredName, organization.PhoneNumber, organization.WebsiteURL, organization.APIKey, organization.APISecret, organization.Email, organization.Password).Scan(&organization.ID)
 }
 
 func (r *repo) FindByEmail(ctx context.Context, email string) (*model.Organization, error) {

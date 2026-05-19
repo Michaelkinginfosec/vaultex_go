@@ -51,18 +51,20 @@ func (s *service) CreateOrganization(ctx context.Context, organizationname strin
 	}
 	organization := &model.Organization{
 		OrganizationName: organizationname,
-
-		RegisteredName: registeredname,
-		PhoneNumber:    phonenumber,
-		Email:          email,
-		Password:       hashPassword,
-		WebsiteURL:     &websiteurl,
-		APIKey:         apiKey,
-		APISecret:      encryptedSecret,
+		RegisteredName:   registeredname,
+		PhoneNumber:      phonenumber,
+		WebsiteURL:       &websiteurl,
+		APIKey:           apiKey,
+		APISecret:        encryptedSecret,
+		Email:            email,
+		Password:         hashPassword,
 	}
 
 	err = s.OrgRepo.Create(ctx, organization)
-
+	if err != nil {
+		return nil, util.InternalServerError("failed to create organization")
+	}
+	organization.APISecret = apiSecret
 	return organization, err
 }
 
