@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE IF NOT EXISTS organization (
+CREATE TABLE IF NOT EXISTS organizations (
 
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_name VARCHAR(255) NOT NULL,
@@ -17,4 +17,4 @@ CREATE TABLE IF NOT EXISTS organization (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_organization_email ON organization(email);
+CREATE INDEX idx_organization_email ON organizations(email);
