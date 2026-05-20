@@ -44,9 +44,18 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 	}
 	ctx := c.Request.Context()
 
-	organization, err := h.service.CreateOrganization(ctx, req.OrganizationName, req.RegisteredName, req.PhoneNumber, req.Email, req.Password, req.PhoneNumber)
+	organization, err := h.service.CreateOrganization(
+		ctx,
+		req.OrganizationName,
+		req.RegisteredName,
+		req.PhoneNumber,
+		req.Email,
+		req.WebsiteURL,
+		req.Password,
+	)
 
 	if err != nil {
+
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgErr.Code == "23505" {
 				c.JSON(http.StatusConflict, gin.H{

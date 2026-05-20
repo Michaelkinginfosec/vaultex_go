@@ -3,14 +3,16 @@ package repository
 import (
 	"context"
 	"vaultex/internal/model"
+	"vaultex/pkg/util"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type OrganizationRepository interface {
 	Create(ctx context.Context, organization *model.Organization) error
 	FindByEmail(ctx context.Context, email string) (*model.Organization, error)
-	Login(ctx context.Context, email string, password string) (*model.Organization, error)
+	Login(ctx context.Context, email string) (*model.Organization, error)
 }
 
 type repo struct {
@@ -31,17 +33,23 @@ func (r *repo) FindByEmail(ctx context.Context, email string) (*model.Organizati
 	query := `SELECT id, organization_name, registered_name, phone_number, email, api_key FROM organization WHERE email = $1`
 	err := r.db.QueryRow(ctx, query, email).Scan(&organization.ID, &organization.OrganizationName, &organization.RegisteredName, &organization.PhoneNumber, &organization.Email, &organization.APIKey)
 	if err != nil {
-		return nil, err
+		if err == pgx.ErrNoRows {
+			return nil, util.ErrNotFound
+		}
+		return nil, util.InternalServerError(err.Error())
 	}
 	return &organization, nil
 }
 
-func (r *repo) Login(ctx context.Context, email string, password string) (*model.Organization, error) {
+func (r *repo) Login(ctx context.Context, email string) (*model.Organization, error) {
 	var organization model.Organization
-	query := `SELECT id, organization_name, registered_name, phone_number, email, api_key, password FROM organization WHERE email = $1 AND password = $2`
-	err := r.db.QueryRow(ctx, query, email, password).Scan(&organization.ID, &organization.OrganizationName, &organization.RegisteredName, &organization.PhoneNumber, &organization.Email, &organization.APIKey, &organization.Password)
+	query := `SELECT id, organization_name, registered_name, phone_number, email, api_key, password FROM organization WHERE email = $1`
+	err := r.db.QueryRow(ctx, query, email).Scan(&organization.ID, &organization.OrganizationName, &organization.RegisteredName, &organization.PhoneNumber, &organization.Email, &organization.APIKey, &organization.Password)
 	if err != nil {
-		return nil, err
+		if err == pgx.ErrNoRows {
+			return nil, util.ErrNotFound
+		}
+		return nil, util.InternalServerError(err.Error())
 	}
 	return &organization, nil
 }

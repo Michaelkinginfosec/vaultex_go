@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"vaultex/internal/model"
 	"vaultex/internal/repository"
 	"vaultex/pkg/util"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type Service interface {
@@ -70,8 +70,9 @@ func (s *service) CreateOrganization(ctx context.Context, organizationname strin
 
 func (s *service) FindOrganizationByEmail(ctx context.Context, email string) (*model.Organization, error) {
 	org, err := s.OrgRepo.FindByEmail(ctx, email)
+
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == util.ErrNotFound {
 			return nil, util.NotFoundError("organization not found")
 		}
 		return nil, util.InternalServerError(err.Error())
@@ -79,11 +80,21 @@ func (s *service) FindOrganizationByEmail(ctx context.Context, email string) (*m
 	return org, nil
 }
 func (s *service) Login(ctx context.Context, email string, password string) (*model.Organization, error) {
-	org, err := s.FindOrganizationByEmail(ctx, email)
+	email = strings.TrimSpace(strings.ToLower(email))
+	org, err := s.OrgRepo.Login(ctx, email)
 	if err != nil {
+		fmt.Print(err)
 		return nil, util.UnauthorizedError("invalid credentials")
 	}
+
+	// fmt.Println("ORG ID:", org.ID)
+	// fmt.Printf("EMAIL: %q\n", org.Email)
+	// fmt.Printf("PLAIN PASSWORD: %q\n", password)
+	// fmt.Printf("HASH FROM DB: %q\n", org.Password)
+	// fmt.Println("HASH LENGTH:", len(org.Password))
+	// fmt.Println("COMPARE RESULT:", util.ComparePassword(org.Password, password))
 	if !util.ComparePassword(org.Password, password) {
+		fmt.Printf("Password mismatch for email: %s\n", email)
 		return nil, util.UnauthorizedError("invalid credentials")
 	}
 	return org, nil

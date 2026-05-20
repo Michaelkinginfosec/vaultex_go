@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,8 @@ type AppError struct {
 	Code    int
 	Message string
 }
+
+var ErrNotFound = errors.New("not found")
 
 func (e *AppError) Error() string {
 	return e.Message

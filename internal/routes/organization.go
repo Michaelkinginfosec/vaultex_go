@@ -11,7 +11,6 @@ func OrganizationRoutes(r *gin.RouterGroup, handler *handlers.OrganizationHandle
 	{
 		group.POST("", handler.CreateOrganization)
 		group.POST("/login", handler.Login)
-		// group.GET("/:id", handler.FindOrganizationByAPIKey)
 		group.GET("", handler.FindOrganizationByEmail)
 	}
 }
