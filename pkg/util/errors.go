@@ -3,8 +3,6 @@ package util
 import (
 	"errors"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type AppError struct {
@@ -36,12 +34,4 @@ func InternalServerError(message string) *AppError {
 
 func ConflictError(message string) *AppError {
 	return &AppError{Code: http.StatusConflict, Message: message}
-}
-
-func HandleError(c *gin.Context, err error) {
-	if appErr, ok := err.(*AppError); ok {
-		c.JSON(appErr.Code, gin.H{"error": appErr.Message})
-	} else {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "something went wrong"})
-	}
 }

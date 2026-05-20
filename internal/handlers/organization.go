@@ -3,12 +3,12 @@ package handlers
 import (
 	"net/http"
 	"vaultex/internal/service"
+	"vaultex/internal/shared"
 	"vaultex/pkg/dto"
 	"vaultex/pkg/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type OrganizationHandler struct {
@@ -36,12 +36,13 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		if _, ok := err.(validator.ValidationErrors); ok {
-			c.JSON(http.StatusBadRequest, gin.H{"errors": util.FormatValidationError(err)})
+			shared.BadRequest(c, "Validation failed", util.FormatValidationError(err))
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "malformed request body"})
+			shared.BadRequest(c, "Malformed request body", err.Error())
 		}
 		return
 	}
+
 	ctx := c.Request.Context()
 
 	organization, err := h.service.CreateOrganization(
@@ -55,19 +56,10 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 	)
 
 	if err != nil {
-
-		if pgErr, ok := err.(*pgconn.PgError); ok {
-			if pgErr.Code == "23505" {
-				c.JSON(http.StatusConflict, gin.H{
-					"error": "Organization already registered",
-				})
-				return
-			}
-		}
-
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		shared.HandleError(c, err)
 		return
 	}
+
 	res := dto.OrganizationSignupResponse{
 		ID:               organization.ID,
 		OrganizationName: organization.OrganizationName,
@@ -78,7 +70,7 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 		APISecret:        organization.APISecret,
 	}
 
-	c.JSON(http.StatusCreated, res)
+	shared.Created(c, "Organization created successfully", res)
 }
 
 // FindOrganizationByEmail godoc
@@ -101,12 +93,12 @@ func (h *OrganizationHandler) FindOrganizationByEmail(c *gin.Context) {
 
 	organization, err := h.service.FindOrganizationByEmail(c, email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		shared.HandleError(c, err)
 		return
 	}
 
 	if organization == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "organization not found"})
+		shared.NotFound(c, "Organization not found", nil)
 		return
 	}
 	res := dto.OrganizationLoginResponse{
@@ -137,9 +129,10 @@ func (h *OrganizationHandler) Login(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		if _, ok := err.(validator.ValidationErrors); ok {
-			c.JSON(http.StatusBadRequest, gin.H{"errors": util.FormatValidationError(err)})
+			shared.BadRequest(c, "Validation failed", util.FormatValidationError(err))
+
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "malformed request body"})
+			shared.BadRequest(c, "Malformed request body", err.Error())
 		}
 		return
 	}
@@ -148,7 +141,7 @@ func (h *OrganizationHandler) Login(c *gin.Context) {
 	organization, err := h.service.Login(ctx, req.Email, req.Password)
 
 	if err != nil {
-		util.HandleError(c, err)
+		shared.Unauthorized(c, "Invalid email or password", nil)
 		return
 	}
 
@@ -161,5 +154,5 @@ func (h *OrganizationHandler) Login(c *gin.Context) {
 		APIKey:           organization.APIKey,
 	}
 
-	c.JSON(http.StatusOK, res)
+	shared.OK(c, "Organization logged in successfully", res)
 }
