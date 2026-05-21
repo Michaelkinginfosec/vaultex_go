@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTs accounts (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(wallet_id, currency)
+    UNIQUE(wallet_id, currency),
     UNIQUE(organization_id, account_number)
 );
 CREATE INDEX idx_accounts_wallet_id ON accounts(wallet_id);

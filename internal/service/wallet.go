@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"vaultex/internal/model"
 	"vaultex/internal/repository"
 	"vaultex/pkg/dto"
@@ -10,8 +9,8 @@ import (
 )
 
 type WalletService interface {
-	CreateWallet(ctx context.Context, req *dto.CreateWalletRequest) (*model.Wallet, error)
-	GetWalletByOrganizationIDAndExternalUserID(ctx context.Context, organizationID, externalUserID string) (*model.Wallet, error)
+	CreateWallet(ctx context.Context, organizationID string, req *dto.CreateWalletRequest) (*model.WalletWithAccount, error)
+	GetWalletByOrganizationIDAndExternalUserID(ctx context.Context, organizationID, externalUserID string) (*model.WalletWithAccount, error)
 }
 
 type walletService struct {
@@ -23,44 +22,51 @@ func NewWalletService(ws repository.WalletRepository) WalletService {
 
 }
 
-func (s *walletService) CreateWallet(ctx context.Context, req *dto.CreateWalletRequest) (*model.Wallet, error) {
-	existingOrg, _ := s.WalletRepo.FindByOrganizationIDAndExternalUserID(ctx, req.OrganizationID, req.ExternalUserID)
-	if existingOrg != nil {
-		return nil, util.ConflictError("Wallet already exists for this user")
+func (s *walletService) CreateWallet(ctx context.Context, organizationID string, req *dto.CreateWalletRequest) (*model.WalletWithAccount, error) {
+	existingWallet, err := s.WalletRepo.FindByOrganizationIDAndExternalUserID(ctx, organizationID, req.ExternalUserID)
+	if err != nil && err != util.ErrNotFound {
+		return nil, util.InternalServerError("failed to check existing wallet")
 	}
+	if existingWallet != nil {
+		return nil, util.ConflictError("wallet already exists for this user")
+	}
+
 	wallet := &model.Wallet{
-		OrganizationID:    req.OrganizationID,
+		OrganizationID:    organizationID,
 		ExternalUserID:    req.ExternalUserID,
 		ExternalUserEmail: req.ExternalUserEmail,
 		Currency:          req.Currency,
 		MetaData:          req.MetaData,
 	}
 
-	err := s.WalletRepo.Create(ctx, wallet)
-	if err != nil {
-		fmt.Printf("Error creating wallet: %v\n", err)
-		return nil, util.InternalServerError("failed to create wallet")
+	account := &model.Account{
+		OrganizationID: organizationID,
+		AccountNumber:  req.AccountNumber,
+		AccountName:    req.AccountName,
+		Currency:       req.Currency,
 	}
-	return wallet, nil
+
+	err = s.WalletRepo.Create(ctx, wallet, account)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.WalletWithAccount{
+		Wallet:  wallet,
+		Account: account,
+	}, nil
 }
 
-func (s *walletService) GetWalletByOrganizationIDAndExternalUserID(ctx context.Context, organizationID, externalUserID string) (*model.Wallet, error) {
+func (s *walletService) GetWalletByOrganizationIDAndExternalUserID(ctx context.Context, organizationID, externalUserID string) (*model.WalletWithAccount, error) {
 	wallet, err := s.WalletRepo.FindByOrganizationIDAndExternalUserID(ctx, organizationID, externalUserID)
+
 	if err != nil {
-		return nil, util.InternalServerError("failed to find wallet")
+		if err == util.ErrNotFound {
+			return nil, util.NotFoundError("wallet not found")
+		}
+
+		return nil, err
 	}
 
-	userWallet := &model.Wallet{
-		ID:                wallet.ID,
-		OrganizationID:    wallet.OrganizationID,
-		ExternalUserID:    wallet.ExternalUserID,
-		ExternalUserEmail: wallet.ExternalUserEmail,
-		Currency:          wallet.Currency,
-		Balance:           wallet.Balance,
-		LedgerBalance:     wallet.LedgerBalance,
-		MetaData:          wallet.MetaData,
-		IsActive:          wallet.IsActive,
-		CreatedAt:         wallet.CreatedAt,
-	}
-	return userWallet, nil
+	return wallet, nil
 }

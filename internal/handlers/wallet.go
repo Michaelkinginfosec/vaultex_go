@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+	"strconv"
 	"time"
+	"vaultex/internal/model"
 	"vaultex/internal/service"
 	"vaultex/internal/shared"
 	"vaultex/pkg/dto"
@@ -47,28 +50,19 @@ func (h *WalletHandler) CreateWallet(c *gin.Context) {
 		}
 		return
 	}
+
+	orgID := c.GetString("org_id")
 	ctx := c.Request.Context()
 
-	wallet, err := h.service.CreateWallet(ctx, &req)
+	walletWithAccount, err := h.service.CreateWallet(ctx, orgID, &req)
 	if err != nil {
 		shared.HandleError(c, err)
 		return
 	}
 
-	res := &dto.CreateWalletResponse{
-		ID:                wallet.ID,
-		OrganizationID:    wallet.OrganizationID,
-		ExternalUserID:    wallet.ExternalUserID,
-		ExternalUserEmail: wallet.ExternalUserEmail,
-		Currency:          wallet.Currency,
-		Balance:           wallet.Balance,
-		LedgerBalance:     wallet.LedgerBalance,
-		MetaData:          wallet.MetaData,
-		IsActive:          wallet.IsActive,
-		CreatedAt:         wallet.CreatedAt.Format(time.RFC3339),
-	}
-	shared.Created(c, "Wallet created successfully", res)
+	res := mapWalletWithAccountResponse(walletWithAccount)
 
+	shared.Created(c, "Wallet created successfully", res)
 }
 
 // GetWalletByExternalUserID godoc
@@ -88,28 +82,57 @@ func (h *WalletHandler) CreateWallet(c *gin.Context) {
 // @Failure 404 {object} shared.APIResponse
 // @Failure 500 {object} shared.APIResponse
 // @Router /wallets/{external_user_id} [get]
-func (h *WalletHandler) GetWalletByOrganizationIDAndExternalUserID(c *gin.Context) {
+func (h *WalletHandler) GetWalletByExternalUserID(c *gin.Context) {
 	organizationID := c.GetString("org_id")
 	externalUserID := c.Param("external_user_id")
 
 	ctx := c.Request.Context()
-	wallet, err := h.service.GetWalletByOrganizationIDAndExternalUserID(ctx, organizationID, externalUserID)
+
+	walletWithAccount, err := h.service.GetWalletByOrganizationIDAndExternalUserID(
+		ctx,
+		organizationID,
+		externalUserID,
+	)
+
 	if err != nil {
 		shared.HandleError(c, err)
 		return
 	}
 
-	res := &dto.CreateWalletResponse{
-		ID:                wallet.ID,
-		OrganizationID:    wallet.OrganizationID,
-		ExternalUserID:    wallet.ExternalUserID,
-		ExternalUserEmail: wallet.ExternalUserEmail,
-		Currency:          wallet.Currency,
-		Balance:           wallet.Balance,
-		LedgerBalance:     wallet.LedgerBalance,
-		MetaData:          wallet.MetaData,
-		IsActive:          wallet.IsActive,
-		CreatedAt:         wallet.CreatedAt.Format(time.RFC3339),
-	}
+	res := mapWalletWithAccountResponse(walletWithAccount)
+
 	shared.OK(c, "Wallet retrieved successfully", res)
+}
+func mapWalletWithAccountResponse(data *model.WalletWithAccount) *dto.WalletWithAccountResponse {
+	return &dto.WalletWithAccountResponse{
+		Wallet: dto.WalletResponse{
+			ID:                data.Wallet.ID,
+			OrganizationID:    data.Wallet.OrganizationID,
+			ExternalUserID:    data.Wallet.ExternalUserID,
+			ExternalUserEmail: data.Wallet.ExternalUserEmail,
+			Currency:          data.Wallet.Currency,
+			MetaData:          data.Wallet.MetaData,
+			IsActive:          data.Wallet.IsActive,
+			CreatedAt:         data.Wallet.CreatedAt.Format(time.RFC3339),
+		},
+		Account: dto.AccountResponse{
+			ID:               data.Account.ID,
+			WalletID:         data.Account.WalletID,
+			AccountNumber:    data.Account.AccountNumber,
+			AccountName:      data.Account.AccountName,
+			Currency:         data.Account.Currency,
+			LedgerBalance:    data.Account.LedgerBalance,
+			LockedBalance:    data.Account.LockedBalance,
+			AvailableBalance: calculateAvailableBalance(data.Account.LedgerBalance, data.Account.LockedBalance),
+			IsActive:         data.Account.IsActive,
+			CreatedAt:        data.Account.CreatedAt.Format(time.RFC3339),
+		},
+	}
+}
+
+func calculateAvailableBalance(ledgerBalance, lockedBalance string) string {
+	ledger, _ := strconv.ParseFloat(ledgerBalance, 64)
+	locked, _ := strconv.ParseFloat(lockedBalance, 64)
+
+	return fmt.Sprintf("%.2f", ledger-locked)
 }
