@@ -7,14 +7,10 @@ CREATE TABLE IF NOT EXISTS wallets (
     external_user_id VARCHAR  NOT NULL,
     external_user_email VARCHAR,
     currency VARCHAR(3) NOT NULL DEFAULT 'NGN',
-    balance DECIMAL(20, 2) NOT NULL DEFAULT 0.00,
-    ledger_balance DECIMAL(20, 2) NOT NULL DEFAULT 0.00,
-    locked_balance DECIMAL(20, 2) NOT NULL DEFAULT 0.00,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-
     UNIQUE (organization_id, external_user_id)
 );
 
