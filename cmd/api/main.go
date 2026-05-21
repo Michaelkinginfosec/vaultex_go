@@ -5,6 +5,7 @@ import (
 	"log"
 	_ "vaultex/docs"
 	"vaultex/internal/handlers"
+	"vaultex/internal/middleware"
 	"vaultex/internal/repository"
 	"vaultex/internal/routes"
 	"vaultex/internal/service"
@@ -22,6 +23,9 @@ import (
 // @contact.name API Support
 // @contact.url https://github.com/michaelkinginfosec
 // @contact.email osundemichael7@gmail.com
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name x-api-key
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -33,9 +37,13 @@ func main() {
 		fmt.Printf("Error connecting to database: %v\n", err)
 		return
 	}
-	userRepo := repository.NewRepository(pool)
-	userService := service.NewService(userRepo)
-	organizationHandler := handlers.NewOrganizationHandler(userService)
+
+	organizationRepo := repository.NewRepository(pool)
+	walletRepo := repository.NewWalletRepository(pool)
+	organizationService := service.NewService(organizationRepo)
+	walletService := service.NewWalletService(walletRepo)
+	organizationHandler := handlers.NewOrganizationHandler(organizationService)
+	walletHandler := handlers.NewWalletHandler(walletService)
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 
@@ -48,7 +56,9 @@ func main() {
 	})
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
+	authMiddleware := middleware.AuthMiddleware(pool)
 	routes.OrganizationRoutes(v1, organizationHandler)
+	routes.WalletRoutes(v1, walletHandler, authMiddleware)
 	api.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	log.Printf("Server running on :%s\n", cfg.Port)
 	r.Run(":" + cfg.Port)

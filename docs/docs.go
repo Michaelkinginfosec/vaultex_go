@@ -39,7 +39,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateOrganizationRequest"
+                            "$ref": "#/definitions/vaultex_pkg_dto.CreateOrganizationRequest"
                         }
                     }
                 ],
@@ -47,25 +47,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.OrganizationSignupResponse"
+                            "$ref": "#/definitions/vaultex_pkg_dto.OrganizationSignupResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     }
                 }
@@ -97,19 +97,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.OrganizationLoginResponse"
+                            "$ref": "#/definitions/vaultex_pkg_dto.OrganizationLoginResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     }
                 }
@@ -135,7 +135,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
+                            "$ref": "#/definitions/vaultex_pkg_dto.LoginRequest"
                         }
                     }
                 ],
@@ -143,25 +143,191 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.OrganizationLoginResponse"
+                            "$ref": "#/definitions/vaultex_pkg_dto.OrganizationLoginResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallets": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a wallet for an external user under the authenticated organization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Create user wallet",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "API Key",
+                        "name": "x-api-key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "HMAC Signature",
+                        "name": "x-signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unix Timestamp",
+                        "name": "x-timestamp",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Create wallet request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_pkg_dto.CreateWalletRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallets/{external_user_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a wallet using the authenticated organization and external user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallets"
+                ],
+                "summary": "Get wallet by external user ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "API Key",
+                        "name": "x-api-key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "HMAC Signature",
+                        "name": "x-signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Unix Timestamp",
+                        "name": "x-timestamp",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "External User ID",
+                        "name": "external_user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/vaultex_internal_shared.APIResponse"
                         }
                     }
                 }
@@ -169,7 +335,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.CreateOrganizationRequest": {
+        "vaultex_internal_shared.APIResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {},
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "vaultex_pkg_dto.CreateOrganizationRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -200,15 +379,33 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ErrorResponse": {
+        "vaultex_pkg_dto.CreateWalletRequest": {
             "type": "object",
+            "required": [
+                "currency",
+                "external_user_id",
+                "organization_id"
+            ],
             "properties": {
-                "error": {
+                "currency": {
+                    "type": "string"
+                },
+                "external_user_email": {
+                    "type": "string"
+                },
+                "external_user_id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "organization_id": {
                     "type": "string"
                 }
             }
         },
-        "dto.LoginRequest": {
+        "vaultex_pkg_dto.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -224,7 +421,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.OrganizationLoginResponse": {
+        "vaultex_pkg_dto.OrganizationLoginResponse": {
             "type": "object",
             "properties": {
                 "api_key": {
@@ -247,7 +444,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.OrganizationSignupResponse": {
+        "vaultex_pkg_dto.OrganizationSignupResponse": {
             "type": "object",
             "properties": {
                 "api_key": {
@@ -272,6 +469,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "x-api-key",
+            "in": "header"
         }
     }
 }`

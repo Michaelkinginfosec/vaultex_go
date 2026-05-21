@@ -27,9 +27,9 @@ func NewOrganizationHandler(s service.Service) *OrganizationHandler {
 // @Produce json
 // @Param organization body dto.CreateOrganizationRequest true "Organization data"
 // @Success 201 {object} dto.OrganizationSignupResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 409 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 400 {object} shared.APIResponse
+// @Failure 409 {object} shared.APIResponse
+// @Failure 500 {object} shared.APIResponse
 // @Router /organizations [post]
 func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 	var req dto.CreateOrganizationRequest
@@ -81,8 +81,8 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 // @Produce json
 // @Param email path string true "Organization Email"
 // @Success 200 {object} dto.OrganizationLoginResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 404 {object} shared.APIResponse
+// @Failure 500 {object} shared.APIResponse
 // @Router /organizations/email/{email} [get]
 func (h *OrganizationHandler) FindOrganizationByEmail(c *gin.Context) {
 	email := c.Query("email")
@@ -109,7 +109,7 @@ func (h *OrganizationHandler) FindOrganizationByEmail(c *gin.Context) {
 		Email:            organization.Email,
 		APIKey:           organization.APIKey,
 	}
-	c.JSON(http.StatusOK, res)
+	shared.OK(c, "Organization retrieved successfully", res)
 }
 
 // Login godoc
@@ -120,9 +120,9 @@ func (h *OrganizationHandler) FindOrganizationByEmail(c *gin.Context) {
 // @Produce json
 // @Param credentials body dto.LoginRequest true "Login credentials"
 // @Success 200 {object} dto.OrganizationLoginResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 400 {object} shared.APIResponse
+// @Failure 401 {object} shared.APIResponse
+// @Failure 500 {object} shared.APIResponse
 // @Router /organizations/login [post]
 func (h *OrganizationHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest

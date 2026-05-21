@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS wallets (
     currency VARCHAR(3) NOT NULL DEFAULT 'NGN',
     balance DECIMAL(20, 2) NOT NULL DEFAULT 0.00,
     ledger_balance DECIMAL(20, 2) NOT NULL DEFAULT 0.00,
+    locked_balance DECIMAL(20, 2) NOT NULL DEFAULT 0.00,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW(),

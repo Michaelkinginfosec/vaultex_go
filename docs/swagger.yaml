@@ -1,5 +1,14 @@
 definitions:
-  dto.CreateOrganizationRequest:
+  vaultex_internal_shared.APIResponse:
+    properties:
+      data: {}
+      error: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  vaultex_pkg_dto.CreateOrganizationRequest:
     properties:
       email:
         type: string
@@ -21,12 +30,25 @@ definitions:
     - phone_number
     - registered_name
     type: object
-  dto.ErrorResponse:
+  vaultex_pkg_dto.CreateWalletRequest:
     properties:
-      error:
+      currency:
         type: string
+      external_user_email:
+        type: string
+      external_user_id:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      organization_id:
+        type: string
+    required:
+    - currency
+    - external_user_id
+    - organization_id
     type: object
-  dto.LoginRequest:
+  vaultex_pkg_dto.LoginRequest:
     properties:
       email:
         type: string
@@ -37,7 +59,7 @@ definitions:
     - email
     - password
     type: object
-  dto.OrganizationLoginResponse:
+  vaultex_pkg_dto.OrganizationLoginResponse:
     properties:
       api_key:
         type: string
@@ -52,7 +74,7 @@ definitions:
       registered_name:
         type: string
     type: object
-  dto.OrganizationSignupResponse:
+  vaultex_pkg_dto.OrganizationSignupResponse:
     properties:
       api_key:
         type: string
@@ -90,26 +112,26 @@ paths:
         name: organization
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateOrganizationRequest'
+          $ref: '#/definitions/vaultex_pkg_dto.CreateOrganizationRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.OrganizationSignupResponse'
+            $ref: '#/definitions/vaultex_pkg_dto.OrganizationSignupResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
       summary: Create a new organization
       tags:
       - Auth
@@ -130,15 +152,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.OrganizationLoginResponse'
+            $ref: '#/definitions/vaultex_pkg_dto.OrganizationLoginResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
       summary: Get organization by email
       tags:
       - organizations
@@ -153,27 +175,142 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/vaultex_pkg_dto.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.OrganizationLoginResponse'
+            $ref: '#/definitions/vaultex_pkg_dto.OrganizationLoginResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
       summary: Login an organization
       tags:
       - Auth
+  /wallets:
+    post:
+      consumes:
+      - application/json
+      description: Create a wallet for an external user under the authenticated organization
+      parameters:
+      - description: API Key
+        in: header
+        name: x-api-key
+        required: true
+        type: string
+      - description: HMAC Signature
+        in: header
+        name: x-signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: x-timestamp
+        required: true
+        type: string
+      - description: Create wallet request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/vaultex_pkg_dto.CreateWalletRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create user wallet
+      tags:
+      - Wallets
+  /wallets/{external_user_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a wallet using the authenticated organization and external
+        user ID
+      parameters:
+      - description: API Key
+        in: header
+        name: x-api-key
+        required: true
+        type: string
+      - description: HMAC Signature
+        in: header
+        name: x-signature
+        required: true
+        type: string
+      - description: Unix Timestamp
+        in: header
+        name: x-timestamp
+        required: true
+        type: string
+      - description: External User ID
+        in: path
+        name: external_user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vaultex_internal_shared.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get wallet by external user ID
+      tags:
+      - Wallets
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: x-api-key
+    type: apiKey
 swagger: "2.0"

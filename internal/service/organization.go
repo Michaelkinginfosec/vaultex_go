@@ -65,7 +65,7 @@ func (s *service) CreateOrganization(ctx context.Context, organizationname strin
 		return nil, util.InternalServerError("failed to create organization")
 	}
 	organization.APISecret = apiSecret
-	return organization, err
+	return organization, nil
 }
 
 func (s *service) FindOrganizationByEmail(ctx context.Context, email string) (*model.Organization, error) {
